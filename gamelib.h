@@ -7,7 +7,7 @@
 typedef enum {astronauta, impostore, assassinato, defenestrato}Stato_giocatore;
 
 //Nome_giocatore definisce il nome in base al colore assegnato
-typedef enum {rosso, rosa, blu, viola, verde, ciano, giallo, arancione, bianco, nero}Nome_giocatore;
+typedef enum {rosso, rosa, blu, viola, verde, ciano, giallo, arancione, bianco, marrone}Nome_giocatore;
 
 //Tipo_Stanza descrive la stanza e cosa contiene
 typedef enum {vuota, quest_semplice, quest_complicata, botola}Tipo_Stanza;
@@ -35,4 +35,4 @@ typedef struct Giocatore
 //prototipi delle funzioni
 void imposta_gioco();
 void gioca();
-//void termina_gioco();
+void Termina_Gioco();
