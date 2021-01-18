@@ -30,7 +30,7 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col);
 static S_Stanza *Elimina(S_Stanza*Node);
 static S_Stanza *prossimaStanza(S_Stanza *stanza);
 static void mischia_turni(int v[]);
-static void Defenestra(S_Stanza *stanza, int nome, int col);
+static int Defenestra(S_Stanza *stanza, int nome, int col);
 static void SetColor(int col);
 static void Inizia_gioco();
 
@@ -108,7 +108,7 @@ void gioca(){
 
   int colore;
   int s;
-  unsigned short quest_fatta;
+  int controllo_scelta = 0;
   int turno_giocatori[num_g];
   int count = 0;
   time_t t;
@@ -127,7 +127,6 @@ void gioca(){
       mischia_turni(turno_giocatori);
       count = 0;
     }
-
     colore = turno_giocatori[count];
     count++;
     SetColor(colore);
@@ -146,25 +145,33 @@ void gioca(){
       printf("\n2) eseguire la quest");
       printf("\n3) Chiamata di emergenza\n");
       scanf("%d", &s);
-      switch(s)
-      {
-        case 1:
-          avanza(colore);
-          break;
-        case 2:
-            if(esegui_quest(colore) == 0)
-            {
-              printf("\nNon ci sono quest da fare in questa stanza");
-              fflush(stdin);
-              while(getchar() != '\n');
-              s = 0;
-            }
-          break;
-        case 3:
-          //emergenza(giocatori[colore].pos); break;
-          break;
-      }
+      controllo_scelta = 0;
+      do{
+        switch(s){
+          case 1:
+            avanza(colore);
+            controllo_scelta = 1;
+            break;
+            case 2:
+              if(esegui_quest(colore) == 0)
+                printf("\nNon ci sono quest da fare in questa stanza");
+              else
+                controllo_scelta = 1;
+              break;
+              case 3:
+              //emergenza(giocatori[colore].pos); break;
+              break;
+            default:
+              printf("\ncomando sbagliato" );
+            break;
+          }
+        if(controllo_scelta == 0){
+          printf("\nInserisci un'altra voce: ");
+          scanf("%d", &s);
+        }
+      }while(controllo_scelta == 0);
     }
+
     if(giocatori[colore].stato == impostore)
     {
       printf("\nTurno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
@@ -177,19 +184,36 @@ void gioca(){
       printf("\n2) Chiamata di emergenza");
       printf("\n3) Uccidi\n");
       scanf("%d", &s);
-      switch(s)
-      {
-        case 1:
-          avanza(colore); break;
-        case 2:
-          //emergenza(giocatori[colore].pos);
-          break;
-        case 3:
-          if(Uccidi_astronauta(giocatori[colore].pos, giocatori[colore].nome, colore) == 1)
-          break;
-        case 4:
-        case 5: break;
-      }
+
+      do{
+        switch(s)
+        {
+          case 1:
+            avanza(colore);
+            controllo_scelta = 1;
+            break;
+          case 2:
+            //emergenza(giocatori[colore].pos);
+            controllo_scelta = 1;
+            break;
+          case 3:
+            if(Uccidi_astronauta(giocatori[colore].pos, giocatori[colore].nome, colore) == 1)
+              controllo_scelta = 1;
+            else{
+              printf("\nNon ci sono giocatori da uccidere in questa stanza");
+            }
+            break;
+          case 4: break;
+          case 5: break;
+          default:
+            printf("\ncomando sbagliato");
+            break;
+        }
+        if(controllo_scelta == 0){
+          printf("\nInserisci un'altra voce: ");
+          scanf("%d", &s);
+        }
+      }while(controllo_scelta == 0);
     }
 
     nImp = 0;
@@ -508,59 +532,6 @@ static void avanza(int num){
     case 4:
       break;
   }
-  /*switch(s)
-  {
-    case 1:
-      if(lista_stanze->avanti == NULL)
-      {
-        lista_stanze->avanti = (S_Stanza*)malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->avanti;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(lista_stanze->avanti != NULL){
-        giocatori[num].pos = lista_stanze->avanti;
-      } break;
-
-    case 2:
-      if(lista_stanze->destra == NULL)
-      {
-        lista_stanze->destra =(S_Stanza*) malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->destra;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(lista_stanze->destra != NULL){
-        giocatori[num].pos = lista_stanze->destra;
-      } break;
-
-    case 3:
-      if(lista_stanze->sinistra == NULL)
-      {
-        lista_stanze->sinistra = (S_Stanza*)malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->sinistra;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(lista_stanze->sinistra != NULL){
-        giocatori[num].pos = lista_stanze->sinistra;
-      } break;
-
-    case 4:
-      break;
-  }*/
 }
 
 static unsigned short esegui_quest(int num){
@@ -602,17 +573,14 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   int n = 0;
   int s;
 
-  for(int i = 0; i < num_g; i++)
-  {
-    if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta)
-    {
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta){
       n++;
     }
   }
   if(n == 0)
     return 0;
-  else
-  {
+  else{
     printf("\nPuoi uccidere i seguenti giocatori:");
     for(int i = 0; i < num_g; i++){
       if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == 0){
@@ -620,13 +588,17 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
       }
     }
     scanf("%d", &s);
-    giocatori[s].stato = 2;
-    Defenestra(stanza, nome, col);
-    return 1;
+    giocatori[s].stato = assassinato;
+    if(Defenestra(stanza, nome, col) == 1){
+      giocatori[s].stato = defenestrato;
+      return 1;
+    }
+    else
+      return 0;
   }
 }
 
-static void Defenestra(S_Stanza *stanza, int nome, int col){
+static int Defenestra(S_Stanza *stanza, int nome, int col){
   int n = 0;
   int d = 0;
   for(int i = 0; i < num_g; i++){
@@ -637,16 +609,17 @@ static void Defenestra(S_Stanza *stanza, int nome, int col){
   }
   d = rand()%10;
   if(d <= n)
-    giocatori[col].stato = 3;
-  if(giocatori[col].stato == 3){
+    giocatori[col].stato = defenestrato;
+  if(giocatori[col].stato == defenestrato){
       clr();
       fflush(stdin);
       printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[col].nome));
-      //printf("\nIl giocatore %s è stato defenestrato\nPremere invio per continuare", StampaN(giocatori[col].nome));
       getchar();
       while(getchar() != '\n');
+      return 1;
   }
-  return;
+  else
+    return 0;
 }
 
 static S_Stanza *prossimaStanza(S_Stanza *stanza){
@@ -668,18 +641,6 @@ static S_Stanza *Elimina(S_Stanza*Node){
     free(lista_stanze);
     lista_stanze = appoggio;
   }
-  /*while(prossimaStanza(Node) != Node)
-  {
-    printf("ciao\n");
-    if((Node->avanti) != NULL)
-      Node->avanti = Elimina(Node->avanti);
-    else if((Node->sinistra) != NULL)
-      Node->sinistra = Elimina(Node->sinistra);
-    else if((Node->destra) != NULL)
-      Node->destra = Elimina(Node->destra);
-    printf("\nelimino il nodo %p",Node);
-    //free(Node);
-  }*/
 
   printf("\nelimino il nodo %p",Node);
   free(Node);
@@ -691,3 +652,73 @@ void Termina_Gioco(){
   free(giocatori);
   free(stanza_inizio);
 }
+
+
+
+/*while(prossimaStanza(Node) != Node)
+{
+  printf("ciao\n");
+  if((Node->avanti) != NULL)
+    Node->avanti = Elimina(Node->avanti);
+  else if((Node->sinistra) != NULL)
+    Node->sinistra = Elimina(Node->sinistra);
+  else if((Node->destra) != NULL)
+    Node->destra = Elimina(Node->destra);
+  printf("\nelimino il nodo %p",Node);
+  //free(Node);
+}*/
+
+
+/*switch(s)
+{
+  case 1:
+    if(lista_stanze->avanti == NULL)
+    {
+      lista_stanze->avanti = (S_Stanza*)malloc(sizeof(S_Stanza));
+      lista_stanze->stanza_precedente = lista_stanze;
+      lista_stanze = lista_stanze->avanti;
+      lista_stanze->avanti = NULL;
+      lista_stanze->destra = NULL;
+      lista_stanze->sinistra = NULL;
+      lista_stanze->tStanza = probabilita();
+      giocatori[num].pos = lista_stanze;
+    }
+    else if(lista_stanze->avanti != NULL){
+      giocatori[num].pos = lista_stanze->avanti;
+    } break;
+
+  case 2:
+    if(lista_stanze->destra == NULL)
+    {
+      lista_stanze->destra =(S_Stanza*) malloc(sizeof(S_Stanza));
+      lista_stanze->stanza_precedente = lista_stanze;
+      lista_stanze = lista_stanze->destra;
+      lista_stanze->avanti = NULL;
+      lista_stanze->destra = NULL;
+      lista_stanze->sinistra = NULL;
+      lista_stanze->tStanza = probabilita();
+      giocatori[num].pos = lista_stanze;
+    }
+    else if(lista_stanze->destra != NULL){
+      giocatori[num].pos = lista_stanze->destra;
+    } break;
+
+  case 3:
+    if(lista_stanze->sinistra == NULL)
+    {
+      lista_stanze->sinistra = (S_Stanza*)malloc(sizeof(S_Stanza));
+      lista_stanze->stanza_precedente = lista_stanze;
+      lista_stanze = lista_stanze->sinistra;
+      lista_stanze->avanti = NULL;
+      lista_stanze->destra = NULL;
+      lista_stanze->sinistra = NULL;
+      lista_stanze->tStanza = probabilita();
+      giocatori[num].pos = lista_stanze;
+    }
+    else if(lista_stanze->sinistra != NULL){
+      giocatori[num].pos = lista_stanze->sinistra;
+    } break;
+
+  case 4:
+    break;
+}*/
