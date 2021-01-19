@@ -530,59 +530,6 @@ static void avanza(int num){
           break;
 
   }
-  /*switch(s)
-  {
-    case 1:
-      if(giocatori[num].pos->avanti == NULL)
-      {
-        lista_stanze->avanti = (S_Stanza*)malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->avanti;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(giocatori[num].pos->avanti != NULL){
-        giocatori[num].pos = giocatori[num].pos->avanti;
-      } break;
-
-    case 2:
-      if(giocatori[num].pos->destra == NULL)
-      {
-        lista_stanze->destra =(S_Stanza*) malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->destra;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(giocatori[num].pos->destra != NULL){
-        giocatori[num].pos = giocatori[num].pos->destra;
-      } break;
-
-    case 3:
-      if(giocatori[num].pos->sinistra == NULL)
-      {
-        lista_stanze->sinistra = (S_Stanza*)malloc(sizeof(S_Stanza));
-        lista_stanze->stanza_precedente = lista_stanze;
-        lista_stanze = lista_stanze->sinistra;
-        lista_stanze->avanti = NULL;
-        lista_stanze->destra = NULL;
-        lista_stanze->sinistra = NULL;
-        lista_stanze->tStanza = probabilita();
-        giocatori[num].pos = lista_stanze;
-      }
-      else if(giocatori[num].pos->sinistra != NULL){
-        giocatori[num].pos = giocatori[num].pos->sinistra;
-      } break;
-
-    case 4:
-      break;
-  }*/
 }
 
 static unsigned short esegui_quest(int num){
