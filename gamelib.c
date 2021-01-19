@@ -10,7 +10,7 @@ unsigned short quest_da_finire;
 S_Stanza* stanza_inizio;
 S_Stanza* lista_stanze;
 int num_g = 0;
-int nImp = 1;
+int nImp = 0;
 
 
 // prototipi
@@ -33,6 +33,9 @@ static void mischia_turni(int v[]);
 static int Defenestra(S_Stanza *stanza, int nome, int col);
 static void SetColor(int col);
 static void Inizia_gioco();
+
+static int Sabotaggio(int nome);
+
 
 
 
@@ -100,8 +103,7 @@ void imposta_gioco(){
 //funzione principale
 void gioca(){
 
-  if(num_g == 0)
-  {
+  if(num_g == 0){
     printf("\nprima di giocare è necessario impostare il gioco, verrai riportato al menu principale\n");
     return;
   }
@@ -120,8 +122,7 @@ void gioca(){
   mischia_turni(turno_giocatori);
 
 
-  while(quest_da_finire != 0 && nImp != 0)
-  {
+  while(quest_da_finire != 0 && nImp != 0){
     clr();
     if(count == num_g){
       mischia_turni(turno_giocatori);
@@ -129,40 +130,39 @@ void gioca(){
     }
     colore = turno_giocatori[count];
     count++;
-    SetColor(colore);
 
-    if(giocatori[colore].stato == astronauta)
-    {
+    SetColor(colore);
+    controllo_scelta = 0;
+    if(giocatori[colore].stato == astronauta){
       printf("\nTurno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
       printf("\nPremere invio per iniziare il turno...\n");
       getchar();
       while(getchar()!='\n');
+
       printf("Sei nella stanza: \t%p di tipo: \t%s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
       printf("\nPer vincere la partita mancano %u quest da fare\n", quest_da_finire);
-      printf("\nSei nella stanza insieme ai giocatori:");
       printf("\nIn questa stanza puoi:\n");
       printf("\n1) avanzare");
       printf("\n2) eseguire la quest");
       printf("\n3) Chiamata di emergenza\n");
       scanf("%d", &s);
-      controllo_scelta = 0;
       do{
         switch(s){
           case 1:
             avanza(colore);
             controllo_scelta = 1;
             break;
-            case 2:
-              if(esegui_quest(colore) == 0)
-                printf("\nNon ci sono quest da fare in questa stanza");
-              else
-                controllo_scelta = 1;
-              break;
-              case 3:
+          case 2:
+            if(esegui_quest(colore) == 0)
+              printf("\nNon ci sono quest da fare in questa stanza");
+            else
+              controllo_scelta = 1;
+            break;
+          case 3:
               //emergenza(giocatori[colore].pos); break;
               break;
-            default:
-              printf("\ncomando sbagliato" );
+          default:
+            printf("\ncomando sbagliato" );
             break;
           }
         if(controllo_scelta == 0){
@@ -181,10 +181,10 @@ void gioca(){
       printf("Sei nella stanza: %p di tipo: %s",giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
       printf("\nPremere:");
       printf("\n1) avanzare");
-      printf("\n2) Chiamata di emergenza");
+      printf("\n2) Chiamata di emergenza\n");
       printf("\n3) Uccidi\n");
+      printf("\n4) Sabotaggio\n");
       scanf("%d", &s);
-
       do{
         switch(s)
         {
@@ -197,13 +197,18 @@ void gioca(){
             controllo_scelta = 1;
             break;
           case 3:
-            if(Uccidi_astronauta(giocatori[colore].pos, giocatori[colore].nome, colore) == 1)
-              controllo_scelta = 1;
-            else{
+            if(Uccidi_astronauta(giocatori[colore].pos, giocatori[colore].nome, colore) == 0)
               printf("\nNon ci sono giocatori da uccidere in questa stanza");
+            else{
+              controllo_scelta = 1;
             }
             break;
-          case 4: break;
+            case 4:
+                if(Sabotaggio(colore) == 0)
+                  printf("\nNon è possibile fare un sabotaggio in questa stanza");
+                else
+                  controllo_scelta = 1;
+                break;
           case 5: break;
           default:
             printf("\ncomando sbagliato");
@@ -216,38 +221,17 @@ void gioca(){
       }while(controllo_scelta == 0);
     }
 
-    nImp = 0;
+    /*nImp = 0;
     for(int i = 0; i < num_g; i++)
     {
       if(giocatori[i]. stato == impostore)
         nImp++;
-    }
+    }*/
   }
   //Termina_Gioco();
 }
 
-static void Inizia_gioco(){
-    printf("\nStai per essere rimandato al menu principale");
-    for(int i = 0; i < num_g; i++)
-    {
-      giocatori[i].pos = stanza_inizio;
-    }
-}
 
-static void mischia_turni(int v[]){
-  for(int i = 0; i < num_g; i++)
-  {
-    v[i] = rand()%num_g;
-    for(int j = 0; j < i; j++)
-    {
-      if(v[i] == v[j])
-      {
-        i--;
-        break;
-      }
-    }
-  }
-}
 // funzione che pulisce lo schermo
 static void clr(){
   printf("\033[2J");
@@ -271,7 +255,64 @@ static void SetColor(int col){
   }
 }
 
-// prende il numero di giocatori e lo scrive in n
+static void Inizia_gioco(){
+    printf("\nStai per essere rimandato al menu principale");
+    for(int i = 0; i < num_g; i++)
+    {
+      giocatori[i].pos = stanza_inizio;
+    }
+}
+
+//creo la stanza di partenza
+static int sInizio(){
+  stanza_inizio = (S_Stanza*) malloc(sizeof(S_Stanza));
+  if( stanza_inizio == NULL )
+  {
+    printf("Stanza non allocata in memoria");
+    return 0;
+  }
+
+  stanza_inizio->avanti = NULL;
+  stanza_inizio->destra = NULL;
+  stanza_inizio->sinistra = NULL;
+  stanza_inizio->stanza_precedente = NULL;
+  stanza_inizio->tStanza = rand()%100;
+  if(stanza_inizio->tStanza <= 29)
+  {
+    stanza_inizio->tStanza = vuota;
+  }
+  if(stanza_inizio->tStanza <= 59 && stanza_inizio->tStanza >= 30)
+  {
+    stanza_inizio->tStanza = quest_semplice;
+  }
+  if(stanza_inizio->tStanza <= 74 && stanza_inizio->tStanza >= 60)
+  {
+    stanza_inizio->tStanza = quest_complicata;
+  }
+  if(stanza_inizio->tStanza <= 100 && stanza_inizio->tStanza >= 75)
+  {
+    stanza_inizio->tStanza = botola;
+  }
+  return 1;
+}
+
+//funzione che mischia l'array dei turni
+static void mischia_turni(int v[]){
+  for(int i = 0; i < num_g; i++)
+  {
+    v[i] = rand()%num_g;
+    for(int j = 0; j < i; j++)
+    {
+      if(v[i] == v[j])
+      {
+        i--;
+        break;
+      }
+    }
+  }
+}
+
+// funzione che chiede il numero di giocatori
 static void n_giocatori(){
   printf("\nInserisci il numero di giocatori: (Minimo: 4 e Massimo: 10)\n");
   scanf("%d", &num_g);
@@ -287,7 +328,7 @@ static void n_giocatori(){
   }while(num_g < 4 || num_g > 10);
 }
 
-//assegna ai giocatori i nomi
+//assegna i nomi ai giocatori
 static void creaNome(){
   time_t t;
 
@@ -315,9 +356,9 @@ static void creaNome(){
   }
 }
 
-//assegna i giocatori lo stato, impostore o astronauta
-static void creaStato(int n){
-  int nImp = 0;
+//assegna ai giocatori lo stato, impostore o astronauta
+static void creaStato(){
+  //int nImp = 0;
   //int num;
 
   if(num_g == 4 || num_g == 5)
@@ -376,39 +417,7 @@ static void creaStato(int n){
   }
 }
 
-//creo la stanza di partenza
-static int sInizio(){
-  stanza_inizio = (S_Stanza*) malloc(sizeof(S_Stanza));
-  if( stanza_inizio == NULL )
-  {
-    printf("Stanza non allocata in memoria");
-    return 0;
-  }
-
-  stanza_inizio->avanti = NULL;
-  stanza_inizio->destra = NULL;
-  stanza_inizio->sinistra = NULL;
-  stanza_inizio->stanza_precedente = NULL;
-  stanza_inizio->tStanza = rand()%100;
-  if(stanza_inizio->tStanza <= 29)
-  {
-    stanza_inizio->tStanza = vuota;
-  }
-  if(stanza_inizio->tStanza <= 59 && stanza_inizio->tStanza >= 30)
-  {
-    stanza_inizio->tStanza = quest_semplice;
-  }
-  if(stanza_inizio->tStanza <= 74 && stanza_inizio->tStanza >= 60)
-  {
-    stanza_inizio->tStanza = quest_complicata;
-  }
-  if(stanza_inizio->tStanza <= 100 && stanza_inizio->tStanza >= 75)
-  {
-    stanza_inizio->tStanza = botola;
-  }
-  return 1;
-}
-
+//funizone pre gestire la probabilità del tipo delle stanze
 static int probabilita(){
   int n;
   lista_stanze->tStanza = rand()%100;
@@ -435,35 +444,35 @@ static int probabilita(){
   return n;
 }
 
-// stampa i nomi dei giocatori
+//funzione che legge l'enum del nome del gioatore e lo ritorna in stringa
 static char *StampaN(int num){
   switch(num)
   {
-    case 0: return "rosso"; break;
-    case 1: return "rosa"; break;
-    case 2: return "blu"; break;
-    case 3: return "viola"; break;
-    case 4: return "verde"; break;
-    case 5: return "ciano"; break;
-    case 6: return "giallo"; break;
-    case 7: return "arancione"; break;
-    case 8: return "bianco"; break;
-    case 9: return "marrone"; break;
+    case rosso: return "rosso"; break;
+    case rosa: return "rosa"; break;
+    case blu: return "blu"; break;
+    case viola: return "viola"; break;
+    case verde: return "verde"; break;
+    case ciano: return "ciano"; break;
+    case giallo: return "giallo"; break;
+    case arancione: return "arancione"; break;
+    case bianco: return "bianco"; break;
+    case marrone: return "marrone"; break;
   }
   return "NULL";
 }
 
-//funzione che ritorna se astronauta o impostore
+//funzione che legge l'enum dello stato del giocatore e lo ritorna in stringa
 static char *StampaS(int num){
   switch(num)
   {
-    case 0: return "astronauta"; break;
-    case 1: return "impostore"; break;
+    case astronauta: return "astronauta"; break;
+    case impostore: return "impostore"; break;
   }
   return "null";
 }
 
-//funzione che prende il valore dell'enum di Tipo_Stanza e ritorna la stringa associata
+//funzione che legge l'enum del tipo della stanza e lo ritorna in stringa
 static char *StampaT(int s){
   switch(s)
   {
@@ -475,6 +484,7 @@ static char *StampaT(int s){
   return "null";
 }
 
+//funzione avanza eseguibile sia dagli astronauti che dagli impostori
 static void avanza(int num){
   int s;
   lista_stanze = giocatori[num].pos;
@@ -532,6 +542,7 @@ static void avanza(int num){
   }
 }
 
+//funzione esugui_quest eseguibile solo dagli astronauti
 static unsigned short esegui_quest(int num){
   if(giocatori[num].pos->tStanza == quest_semplice){
     quest_da_finire = quest_da_finire - 1;
@@ -552,6 +563,7 @@ static unsigned short esegui_quest(int num){
     return 0;
 }
 
+
 static void emergenza(S_Stanza *p){
   for(int i = 0; i < num_g; i++)
   {
@@ -566,6 +578,7 @@ static void emergenza(S_Stanza *p){
   }
 }
 
+//funzione uccidi_astronauta eseguibile solo dagli impostori
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   int count = 1;
   int n = 0;
@@ -596,6 +609,7 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   }
 }
 
+//funzione chiamata da Uccidi_astronauta che gestisce la probabilita dell'impostore di essere defenestrato
 static int Defenestra(S_Stanza *stanza, int nome, int col){
   int n = 0;
   int d = 0;
@@ -609,6 +623,7 @@ static int Defenestra(S_Stanza *stanza, int nome, int col){
   if(d <= n)
     giocatori[col].stato = defenestrato;
   if(giocatori[col].stato == defenestrato){
+      nImp--;
       clr();
       fflush(stdin);
       printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[col].nome));
@@ -617,6 +632,15 @@ static int Defenestra(S_Stanza *stanza, int nome, int col){
       return 1;
   }
   else
+    return 0;
+}
+
+static int Sabotaggio(int nome){
+  if(giocatori[nome].pos -> tStanza == quest_semplice || giocatori[nome].pos -> tStanza == quest_complicata){
+    giocatori[nome].pos -> tStanza = vuota;
+    return 1;
+  }
+  else if(giocatori[nome].pos -> tStanza != quest_semplice && giocatori[nome].pos -> tStanza != quest_complicata)
     return 0;
 }
 
