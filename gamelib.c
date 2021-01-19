@@ -477,9 +477,60 @@ static char *StampaT(int s){
 
 static void avanza(int num){
   int s;
-  printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo:\n", giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
+  lista_stanze = giocatori[num].pos;
+  printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo: %p\n", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
   scanf("%d", &s);
-  switch(s)
+  switch(s){
+    case 1:
+      if (lista_stanze->avanti == NULL){
+        lista_stanze->avanti = (S_Stanza*)malloc(sizeof(S_Stanza));
+        giocatori[num].pos = lista_stanze->avanti;
+        lista_stanze->stanza_precedente = lista_stanze;
+        lista_stanze = lista_stanze->avanti;
+        lista_stanze->avanti = NULL;
+        lista_stanze->destra = NULL;
+        lista_stanze->sinistra = NULL;
+        lista_stanze->tStanza = probabilita();
+      }
+      else if(lista_stanze->avanti != NULL)
+        giocatori[num].pos = lista_stanze->avanti;
+      break;
+
+    case 2:
+      if (lista_stanze->destra == NULL){
+        lista_stanze->destra = (S_Stanza*)malloc(sizeof(S_Stanza));
+        giocatori[num].pos = lista_stanze->destra;
+        lista_stanze->stanza_precedente = lista_stanze;
+        lista_stanze = lista_stanze->destra;
+        lista_stanze->avanti = NULL;
+        lista_stanze->destra = NULL;
+        lista_stanze->sinistra = NULL;
+        lista_stanze->tStanza = probabilita();
+      }
+      else if(lista_stanze->destra != NULL)
+        giocatori[num].pos = lista_stanze->destra;
+      break;
+
+      case 3:
+        if (lista_stanze->sinistra == NULL){
+          lista_stanze->sinistra = (S_Stanza*)malloc(sizeof(S_Stanza));
+          giocatori[num].pos = lista_stanze->sinistra;
+          lista_stanze->stanza_precedente = lista_stanze;
+          lista_stanze = lista_stanze->sinistra;
+          lista_stanze->avanti = NULL;
+          lista_stanze->destra = NULL;
+          lista_stanze->sinistra = NULL;
+          lista_stanze->tStanza = probabilita();
+        }
+        else if(lista_stanze->sinistra != NULL)
+          giocatori[num].pos = lista_stanze->sinistra;
+        break;
+
+        case 4:
+          break;
+
+  }
+  /*switch(s)
   {
     case 1:
       if(giocatori[num].pos->avanti == NULL)
@@ -531,7 +582,7 @@ static void avanza(int num){
 
     case 4:
       break;
-  }
+  }*/
 }
 
 static unsigned short esegui_quest(int num){
