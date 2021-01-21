@@ -26,8 +26,8 @@ static unsigned short esegui_quest(int num);
 static int probabilita();
 static int emergenza(int nome);
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col);
-static S_Stanza *Elimina(S_Stanza*Node);
-static S_Stanza *prossimaStanza(S_Stanza *stanza);
+static S_Stanza *Elimina(S_Stanza *Node);
+static S_Stanza *prossimaStanza(S_Stanza *Node);
 static void mischia_turni(int v[]);
 static int Defenestra(S_Stanza *stanza, int nome, int col);
 static void SetColor(int col);
@@ -648,25 +648,24 @@ static int Defenestra(S_Stanza *stanza, int nome, int col){
   int n = 0;
   int d = 0;
   for(int i = 0; i < num_g; i++){
-    if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == 0)
+    if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta)
       n+=5;
-    if(giocatori[i].pos == giocatori[col].pos->stanza_precedente && giocatori[i].stato == 0)
+    if(giocatori[i].pos == giocatori[col].pos->stanza_precedente && giocatori[i].stato == astronauta)
       n+=2;
   }
-  d = rand()%10;
-  if(d <= n)
-    giocatori[col].stato = defenestrato;
-  if(giocatori[col].stato == defenestrato){
-      nImp--;
-      clr();
-      fflush(stdin);
-      printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[col].nome));
-      getchar();
-      while(getchar() != '\n');
-      return 1;
-  }
-  else
+  if(n == 0)
     return 0;
+  d = rand()%10;
+  if(d <= n){
+    giocatori[col].stato = defenestrato;
+    nImp--;
+    clr();
+    fflush(stdin);
+    printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[col].nome));
+    getchar();
+    while(getchar() != '\n');
+    return 1;
+  }
 }
 
 static int Sabotaggio(int nome){
@@ -678,33 +677,38 @@ static int Sabotaggio(int nome){
     return 0;
 }
 
-static S_Stanza *prossimaStanza(S_Stanza *stanza){
-  printf("ciao\n");
-  if(stanza->avanti != NULL)
-    stanza = stanza->avanti;
-  else if(stanza->destra != NULL)
-    stanza = stanza->destra;
-  else if(stanza->sinistra != NULL)
-    stanza = stanza->sinistra;
-  return stanza;
+static S_Stanza *prossimaStanza(S_Stanza *Node){
+  if(Node->avanti != NULL)
+    Node = Node->avanti;
+  else if(Node->destra != NULL)
+    Node = Node->destra;
+  else if(Node->sinistra != NULL)
+    Node = Node->sinistra;
+  return Node;
 }
 
 static S_Stanza *Elimina(S_Stanza*Node){
-  S_Stanza *appoggio;
-  while(lista_stanze->stanza_precedente != NULL){
-    printf("\nSto eliminando il nodo %p", lista_stanze);
-    appoggio = lista_stanze->stanza_precedente;
-    free(lista_stanze);
-    lista_stanze = appoggio;
+  printf("Elimina è entrata nel nodo %p.\n", Node);
+  while(prossimaStanza(Node) != Node){
+    if((Node->avanti)!=NULL)
+      Node->avanti = Elimina(Node->avanti);
+    if((Node->destra)!= NULL)
+      Node->destra = Elimina(Node->destra);
+    if((Node->sinistra) != NULL)
+      Node->sinistra = Elimina(Node->sinistra);
   }
-
-  printf("\nelimino il nodo %p",Node);
-  free(Node);
+  if(Node == NULL){
+    return NULL;
+  }
+  else{
+    printf("Elimina distruggerà ora il nodo %p.\n", Node);
+    free(Node);
+  }
   return NULL;
 }
-
 void Termina_Gioco(){
+  lista_stanze = stanza_inizio;
   Elimina(lista_stanze);
   free(giocatori);
-  free(stanza_inizio);
+  //free(stanza_inizio);
 }
