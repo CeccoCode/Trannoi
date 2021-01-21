@@ -75,27 +75,30 @@ void imposta_gioco(){
     giocatori[i].pos = stanza_inizio;
   }
 
-  clr();
+
   int scelta = 0;
-  printf(" PREMERE:\n 1. Per visualizzare tutte le informazioni sui giocatori\n 2. Per tornare al menù principale e giocare\n");
-  scanf("%d", &scelta);
-  switch(scelta)
-  {
-    case 1:
+
+  do{
     clr();
-      for(int i = 0; i < num_g; i++){
-        printf("\nIl %d° giocatore è %s ed è un %s %s", i+1 ,StampaN(giocatori[i].nome), StampaS(giocatori[i].stato), StampaT(giocatori[i].pos->tStanza));
-      }
-      printf("\nPremere invio per tornare al menù e avviare il gioco...");
-      getchar();
-      while(getchar() != '\n');
-      break;
-    case 2:
-      Inizia_gioco();
-      break;
-    default:
-      printf("Il tasto premuto non corrisponde a nessuna scelta");
-  }
+    printf(" PREMERE:\n 1. Per visualizzare tutte le informazioni sui giocatori\n 2. Per tornare al menù principale e giocare\n");
+    scanf("%d", &scelta);
+    while(getchar() != '\n');
+    switch(scelta)
+    {
+      case 1:
+      clr();
+        for(int i = 0; i < num_g; i++){
+          printf("\nIl %d° giocatore è %s ed è un %s la stanza di inizio è di tipo %s", i+1 ,StampaN(giocatori[i].nome), StampaS(giocatori[i].stato), StampaT(giocatori[i].pos->tStanza));
+        }
+        printf("\n\nPremere invio per tornare al menù e avviare il gioco...");
+        break;
+      case 2:
+        Inizia_gioco();
+        break;
+      default:
+        printf("Il tasto premuto non corrisponde a nessuna scelta");
+    }
+  }while(scelta != 1 && scelta != 2);
 
 }
 
@@ -319,14 +322,17 @@ static void mischia_turni(int v[]){
 static void n_giocatori(){
   printf("\nInserisci il numero di giocatori: (Minimo: 4 e Massimo: 10)\n");
   scanf("%d", &num_g);
+  while(getchar() != '\n');
   do{
     if(num_g < 4){
       printf("\nInserisci più giocatori:");
       scanf("%d", &num_g);
+      while(getchar() != '\n');
     }
     else if(num_g > 10){
       printf("\nHai inserito troppi giocatori:");
       scanf("%d", &num_g);
+      while(getchar() != '\n');
     }
   }while(num_g < 4 || num_g > 10);
 }
