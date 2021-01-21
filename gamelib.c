@@ -10,6 +10,7 @@ S_Stanza* stanza_inizio;
 S_Stanza* lista_stanze;
 int num_g = 0;
 int nImp = 0;
+S_Stanza *botole[20];
 /*___________________________________________________________________________*/
 
 /*______________________________prototipi____________________________________*/
@@ -24,7 +25,7 @@ static char *StampaT(int s);
 static void avanza(int num);
 static unsigned short esegui_quest(int num);
 static int probabilita();
-static int emergenza(int nome);
+//static int emergenza(int nome);
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col);
 static S_Stanza *Elimina(S_Stanza *Node);
 static S_Stanza *prossimaStanza(S_Stanza *Node);
@@ -44,7 +45,7 @@ static int Sabotaggio(int nome);
 
 /*____________________________Imposta_Gioco()________________________________*/
 void imposta_gioco(){
-
+  int quest;
   clr();  //pulisce lo schermo
 
   n_giocatori();  //funzione che chiede il numero di giocatori
@@ -60,12 +61,14 @@ void imposta_gioco(){
   //chiedo il numero di quest da fare per il salvataggio sell'astronave
   do{
     printf("\nquante quest vuoi inserire?\t");
-    scanf("%hu", &quest_da_finire);
-    if(num_g > (int)quest_da_finire)
+    scanf("%d", &quest);
+    while(getchar() != '\n');
+    if(num_g > quest || quest < 0)
     {
       printf("\nIl numero di quest deve essere maggiore o uguale al numero di giocatori\n");
     }
-  }while(num_g > (int)quest_da_finire);
+  }while(num_g > quest || quest < 0);
+  quest_da_finire = quest;
 
   for(int i = 0; i < num_g; i++)
   {
@@ -134,7 +137,6 @@ void gioca(){
       printf("\nPremere invio per iniziare il turno...\n");
       getchar();
       while(getchar()!='\n');
-
       printf("Sei nella stanza: \t%p di tipo: \t%s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
       printf("\nPer vincere la partita mancano %u quest da fare\n", quest_da_finire);
       printf("\nIn questa stanza puoi:\n");
@@ -142,6 +144,12 @@ void gioca(){
       printf("\n2) eseguire la quest");
       printf("\n3) Chiamata di emergenza\n");
       scanf("%d", &s);
+      while(getchar() != '\n');
+      while(s != 1 && s != 2 && s != 3){
+        printf("\nScelta inesistente, riscrivi qui la tua scelta:\n");
+        scanf("%d", &s);
+        while(getchar() != '\n');
+      }
       do{
         switch(s){
           case 1:
@@ -165,6 +173,7 @@ void gioca(){
         if(controllo_scelta == 0){
           printf("\nInserisci un'altra voce: ");
           scanf("%d", &s);
+          while(getchar() != '\n');
         }
       }while(controllo_scelta == 0);
     }
@@ -182,6 +191,12 @@ void gioca(){
       printf("\n3) Uccidi\n");
       printf("\n4) Sabotaggio\n");
       scanf("%d", &s);
+      while(getchar() != '\n');
+      while(s != 1 && s != 2 && s != 3 && s != 4){
+        printf("\nScelta inesistente, riscrivi qui la tua scelta:\n");
+        scanf("%d", &s);
+        while(getchar() != '\n');
+      }
       do{
         switch(s)
         {
@@ -214,18 +229,11 @@ void gioca(){
         if(controllo_scelta == 0){
           printf("\nInserisci un'altra voce: ");
           scanf("%d", &s);
+          while(getchar() != '\n');
         }
       }while(controllo_scelta == 0);
     }
-
-    /*nImp = 0;
-    for(int i = 0; i < num_g; i++)
-    {
-      if(giocatori[i]. stato == impostore)
-        nImp++;
-    }*/
   }
-  //Termina_Gioco();
 }
 
 
@@ -413,28 +421,16 @@ static void creaStato(){
 //funizone pre gestire la probabilità del tipo delle stanze
 static int probabilita(){
   int n;
-  lista_stanze->tStanza = rand()%100;
-  if(lista_stanze->tStanza <= 29)
-  {
-    lista_stanze->tStanza = vuota;
-    n = 0;
-  }
-  if(lista_stanze->tStanza <= 59 && lista_stanze->tStanza >= 30)
-  {
-    lista_stanze->tStanza = quest_semplice;
-    n = 1;
-  }
-  if(lista_stanze->tStanza <= 74 && lista_stanze->tStanza >= 60)
-  {
-    lista_stanze->tStanza = quest_complicata;
-    n = 2;
-  }
-  if(lista_stanze->tStanza <= 100 && lista_stanze->tStanza >= 75)
-  {
-    lista_stanze->tStanza = botola;
-    n = 3;
-  }
-  return n;
+  n = rand()%100;
+  if(n <= 29)
+    return 0;
+  else if(n <= 59 && n >= 30)
+    return 1;
+  else if(n <= 74 && n >= 60)
+    return 2;
+  else if(n <= 100 && n >= 75)
+    return 3;
+  return 0;
 }
 
 //funzione che legge l'enum del nome del gioatore e lo ritorna in stringa
@@ -469,10 +465,10 @@ static char *StampaS(int num){
 static char *StampaT(int s){
   switch(s)
   {
-    case 0: return "vuota"; break;
-    case 1: return "quest_semplice"; break;
-    case 2: return "quest_complicata"; break;
-    case 3: return "botola"; break;
+    case vuota: return "vuota"; break;
+    case quest_semplice: return "quest_semplice"; break;
+    case quest_complicata: return "quest_complicata"; break;
+    case botola: return "botola"; break;
   }
   return "null";
 }
@@ -483,6 +479,12 @@ static void avanza(int num){
   lista_stanze = giocatori[num].pos;
   printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo: %p\n", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
   scanf("%d", &s);
+  while(getchar()!= '\n');
+  while(s != 1 && s != 2 && s && 3){
+    printf("\nDirezone inesistente, ritenta\n1)avanti\n2)destra\n3)sinistra\n... ");
+    scanf("%d", &s);
+    while(getchar() != '\n');
+  }
   switch(s){
     case 1:
       if (lista_stanze->avanti == NULL){
@@ -616,7 +618,6 @@ static unsigned short esegui_quest(int num){
 
 //funzione uccidi_astronauta eseguibile solo dagli impostori
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
-  int count = 1;
   int n = 0;
   int s;
 
@@ -666,6 +667,7 @@ static int Defenestra(S_Stanza *stanza, int nome, int col){
     while(getchar() != '\n');
     return 1;
   }
+  return 0;
 }
 
 static int Sabotaggio(int nome){
@@ -675,6 +677,7 @@ static int Sabotaggio(int nome){
   }
   else if(giocatori[nome].pos -> tStanza != quest_semplice && giocatori[nome].pos -> tStanza != quest_complicata)
     return 0;
+  return 0;
 }
 
 static S_Stanza *prossimaStanza(S_Stanza *Node){
@@ -706,6 +709,7 @@ static S_Stanza *Elimina(S_Stanza*Node){
   }
   return NULL;
 }
+
 void Termina_Gioco(){
   lista_stanze = stanza_inizio;
   Elimina(lista_stanze);
