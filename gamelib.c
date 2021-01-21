@@ -35,6 +35,7 @@ static int Defenestra(S_Stanza *stanza, int nome, int col);
 static void SetColor(int col);
 static void Inizia_gioco();
 static int Sabotaggio(int nome);
+static int Usa_Botola(int nome);
 /*___________________________________________________________________________*/
 
 
@@ -189,10 +190,11 @@ void gioca(){
       printf("\n1) avanzare");
       printf("\n2) Chiamata di emergenza");
       printf("\n3) Uccidi");
-      printf("\n4) Sabotaggio\n");
+      printf("\n4) Sabotaggio");
+      printf("\n5) Usa botola\n");
       scanf("%d", &s);
       while(getchar() != '\n');
-      while(s != 1 && s != 2 && s != 3 && s != 4){
+      while(s != 1 && s != 2 && s != 3 && s != 4 && s != 5){
         printf("\nScelta inesistente, riscrivi qui la tua scelta:\n");
         scanf("%d", &s);
         while(getchar() != '\n');
@@ -221,7 +223,12 @@ void gioca(){
                 else
                   controllo_scelta = 1;
                 break;
-          case 5: break;
+          case 5:
+            if(Usa_Botola(colore) == 0)
+              printf("\nNon è presente nessuna botola nella stanza");
+            else
+              controllo_scelta = 1;
+            break;
           default:
             printf("\ncomando sbagliato");
             break;
@@ -488,7 +495,7 @@ static void avanza(int num){
   printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo: %p\n", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
   scanf("%d", &s);
   while(getchar()!= '\n');
-  while(s != 1 && s != 2 && s && 3){
+  while(s != 1 && s != 2 && s && 3 && s != 4){
     printf("\nDirezone inesistente, ritenta\n1)avanti\n2)destra\n3)sinistra\n... ");
     scanf("%d", &s);
     while(getchar() != '\n');
@@ -707,6 +714,17 @@ static int Sabotaggio(int nome){
   else if(giocatori[nome].pos -> tStanza != quest_semplice && giocatori[nome].pos -> tStanza != quest_complicata)
     return 0;
   return 0;
+}
+
+static int Usa_Botola(int nome){
+  int n;
+  if(giocatori[nome].pos -> tStanza != botola)
+    return 0;
+  if(contatore_botola > 0){
+    n = rand()%contatore_botola;
+    giocatori[nome].pos = botole[n];
+  }
+  return 1;
 }
 
 static S_Stanza *prossimaStanza(S_Stanza *Node){
