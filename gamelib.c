@@ -11,6 +11,7 @@ S_Stanza* lista_stanze;
 int num_g = 0;
 int nImp = 0;
 S_Stanza *botole[20];
+int contatore_botola = 0;
 /*___________________________________________________________________________*/
 
 /*______________________________prototipi____________________________________*/
@@ -35,12 +36,6 @@ static void SetColor(int col);
 static void Inizia_gioco();
 static int Sabotaggio(int nome);
 /*___________________________________________________________________________*/
-
-
-
-
-
-
 
 
 /*____________________________Imposta_Gioco()________________________________*/
@@ -91,6 +86,8 @@ void imposta_gioco(){
           printf("\nIl %d° giocatore è %s ed è un %s la stanza di inizio è di tipo %s", i+1 ,StampaN(giocatori[i].nome), StampaS(giocatori[i].stato), StampaT(giocatori[i].pos->tStanza));
         }
         printf("\n\nPremere invio per tornare al menù e avviare il gioco...");
+        getchar();
+        while(getchar() != '\n');
         break;
       case 2:
         Inizia_gioco();
@@ -102,7 +99,7 @@ void imposta_gioco(){
 
 }
 
-//funzione principale
+/*_________________________Gioca()_Funzione_principale_______________________*/
 void gioca(){
 
   if(num_g == 0){
@@ -190,8 +187,8 @@ void gioca(){
       printf("Sei nella stanza: %p di tipo: %s",giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
       printf("\nPremere:");
       printf("\n1) avanzare");
-      printf("\n2) Chiamata di emergenza\n");
-      printf("\n3) Uccidi\n");
+      printf("\n2) Chiamata di emergenza");
+      printf("\n3) Uccidi");
       printf("\n4) Sabotaggio\n");
       scanf("%d", &s);
       while(getchar() != '\n');
@@ -240,13 +237,13 @@ void gioca(){
 }
 
 
-// funzione che pulisce lo schermo
+/*_______________________Funzione_che_pulisce_lo_schermo_____________________*/
 static void clr(){
   printf("\033[2J");
   printf("\033[0;0f");
 
 }
-
+/*_____________________Setta_il_colore_del_terminale_________________________*/
 static void SetColor(int col){
   switch(giocatori[col].nome)
   {
@@ -262,7 +259,7 @@ static void SetColor(int col){
     case marrone:   printf("\033[0;33m"); break;
   }
 }
-
+/*_____________________Inizia_gioco()_per_tornare_in_main.c__________________*/
 static void Inizia_gioco(){
     printf("\nPremi invio per tornare al menù principale:\n");
     getchar();
@@ -282,6 +279,7 @@ static int sInizio(){
   stanza_inizio->destra = NULL;
   stanza_inizio->sinistra = NULL;
   stanza_inizio->stanza_precedente = NULL;
+  stanza_inizio->emergenza_chiamata = 1;
   stanza_inizio->tStanza = rand()%100;
   if(stanza_inizio->tStanza <= 29)
   {
@@ -298,6 +296,10 @@ static int sInizio(){
   if(stanza_inizio->tStanza <= 100 && stanza_inizio->tStanza >= 75)
   {
     stanza_inizio->tStanza = botola;
+  }
+  if(stanza_inizio-> tStanza == botola){
+    botole[contatore_botola] = stanza_inizio;
+    contatore_botola++;
   }
   return 1;
 }
@@ -502,6 +504,12 @@ static void avanza(int num){
         lista_stanze->destra = NULL;
         lista_stanze->sinistra = NULL;
         lista_stanze->tStanza = probabilita();
+        lista_stanze->emergenza_chiamata = 1;
+
+        if(giocatori[num].pos -> tStanza == botola){
+          botole[contatore_botola] = giocatori[num].pos;
+          contatore_botola++;
+        }
       }
       else if(lista_stanze->avanti != NULL)
         giocatori[num].pos = lista_stanze->avanti;
@@ -517,6 +525,13 @@ static void avanza(int num){
         lista_stanze->destra = NULL;
         lista_stanze->sinistra = NULL;
         lista_stanze->tStanza = probabilita();
+        lista_stanze->emergenza_chiamata = 1;
+
+
+        if(giocatori[num].pos -> tStanza == botola){
+          botole[contatore_botola] = giocatori[num].pos;
+          contatore_botola++;
+        }
       }
       else if(lista_stanze->destra != NULL)
         giocatori[num].pos = lista_stanze->destra;
@@ -532,6 +547,13 @@ static void avanza(int num){
           lista_stanze->destra = NULL;
           lista_stanze->sinistra = NULL;
           lista_stanze->tStanza = probabilita();
+          lista_stanze->emergenza_chiamata = 1;
+
+
+          if(giocatori[num].pos -> tStanza == botola){
+            botole[contatore_botola] = giocatori[num].pos;
+            contatore_botola++;
+          }
         }
         else if(lista_stanze->sinistra != NULL)
           giocatori[num].pos = lista_stanze->sinistra;
@@ -642,6 +664,7 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
       }
     }
     scanf("%d", &s);
+    while(getchar() != '\n');
     giocatori[s].stato = assassinato;
     if(Defenestra(stanza, nome, col) == 1){
       giocatori[s].stato = defenestrato;
