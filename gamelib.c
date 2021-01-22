@@ -11,7 +11,9 @@ S_Stanza* lista_stanze;
 int num_g = 0;
 int nImp = 0;
 S_Stanza *botole[20];
+S_Stanza *stanze[30];
 int contatore_botola = 0;
+int contatore_stanze = 0;
 /*___________________________________________________________________________*/
 
 /*______________________________prototipi____________________________________*/
@@ -36,6 +38,7 @@ static void SetColor(int col);
 static void Inizia_gioco();
 static int Sabotaggio(int nome);
 static int Usa_Botola(int nome);
+static S_Stanza *Botole(S_Stanza *Node, int nome);
 /*___________________________________________________________________________*/
 
 
@@ -224,10 +227,11 @@ void gioca(){
                   controllo_scelta = 1;
                 break;
           case 5:
-            if(Usa_Botola(colore) == 0)
-              printf("\nNon è presente nessuna botola nella stanza");
-            else
+            if(Usa_Botola(colore) == 1)
               controllo_scelta = 1;
+            else
+              printf("\nNon è presente nessuna botola nella stanza");
+
             break;
           default:
             printf("\ncomando sbagliato");
@@ -495,7 +499,7 @@ static void avanza(int num){
   printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo: %p\n", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
   scanf("%d", &s);
   while(getchar()!= '\n');
-  while(s != 1 && s != 2 && s && 3 && s != 4){
+  while(s != 1 && s != 2 && s != 3 && s != 4){
     printf("\nDirezone inesistente, ritenta\n1)avanti\n2)destra\n3)sinistra\n... ");
     scanf("%d", &s);
     while(getchar() != '\n');
@@ -516,6 +520,10 @@ static void avanza(int num){
         if(giocatori[num].pos -> tStanza == botola){
           botole[contatore_botola] = giocatori[num].pos;
           contatore_botola++;
+        }
+        else{
+          stanze[contatore_stanze] = giocatori[num].pos;
+          contatore_stanze++;
         }
       }
       else if(lista_stanze->avanti != NULL)
@@ -539,6 +547,10 @@ static void avanza(int num){
           botole[contatore_botola] = giocatori[num].pos;
           contatore_botola++;
         }
+        else{
+          stanze[contatore_stanze] = giocatori[num].pos;
+          contatore_stanze++;
+        }
       }
       else if(lista_stanze->destra != NULL)
         giocatori[num].pos = lista_stanze->destra;
@@ -560,6 +572,10 @@ static void avanza(int num){
           if(giocatori[num].pos -> tStanza == botola){
             botole[contatore_botola] = giocatori[num].pos;
             contatore_botola++;
+          }
+          else{
+            stanze[contatore_stanze] = giocatori[num].pos;
+            contatore_stanze++;
           }
         }
         else if(lista_stanze->sinistra != NULL)
@@ -592,64 +608,6 @@ static unsigned short esegui_quest(int num){
   else
     return 0;
 }
-
-
-/*static int emergenza(int nome){
-  int indice[num_g];
-  int j = 0;
-  int p_i = 0;
-  int p_a = 0;
-  int count = 0;
-  int m;
-  for(int i = 0; i < num_g; i++){
-    if(giocatori[nome].pos == giocatori[i].pos && giocatori[i].stato == assassinato){
-      indice[j] = i;
-      j++;
-    }
-  }
-  if(j == 0)
-    return 0;
-  do{
-    switch(giocatori[indice[m]].stato){
-      case impostore:
-        for(int i = 0; i < j; i++){
-          if(giocatori[indice[i]].stato == impostore){
-            p_i-=3;
-          }
-          else if(giocatori[indice[i]].stato == astronauta){
-            p_i += 2;
-          }
-        }
-        if(rand()%10 < p_i){
-          giocatori[indice[m]].stato = defenestrato;
-          count++;
-        }
-        m++;
-        break;
-      case astronauta:
-        for(int i = 0; i < j; i++){
-          if(giocatori[indice[i]].stato == impostore){
-            p_a+=2;
-          }
-          else if(giocatori[indice[i]].stato == astronauta){
-            p_a -= 3;
-          }
-        }
-        if(rand()%10 < p_a){
-          giocatori[indice[m]].stato = defenestrato;
-          printf("\n Il giocatore %s è stato defenestrato\n\nPremi invio per continuare", StampaN(giocatori[indice[m]].nome));
-          getchar();
-          while(getchar() != '\n');
-          count++;
-        }
-        m++;
-        break;
-    }
-
-  }while(count == 0);
-  return 1;
-}*/
-
 
 //funzione uccidi_astronauta eseguibile solo dagli impostori
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
@@ -718,13 +676,25 @@ static int Sabotaggio(int nome){
 
 static int Usa_Botola(int nome){
   int n;
-  if(giocatori[nome].pos -> tStanza != botola)
+  S_Stanza *appoggio = giocatori[nome].pos;
+
+  if(giocatori[nome].pos->tStanza != botola || giocatori[nome].pos->stanza_precedente == NULL)
     return 0;
-  if(contatore_botola > 0){
-    n = rand()%contatore_botola;
-    giocatori[nome].pos = botole[n];
+  if(contatore_botola > 1){
+    do{
+      n = rand()%contatore_botola;
+      giocatori[nome].pos = botole[n];
+    }while(appoggio == botole[n]);
+    return 1;
   }
-  return 1;
+  else if(contatore_stanze > 0){
+    do{
+      n = rand()%contatore_stanze;
+      giocatori[nome].pos = stanze[n];
+    }while(appoggio == stanze[n]);
+    return 1;
+  }
+  return 0;
 }
 
 static S_Stanza *prossimaStanza(S_Stanza *Node){
@@ -740,9 +710,9 @@ static S_Stanza *prossimaStanza(S_Stanza *Node){
 static S_Stanza *Elimina(S_Stanza*Node){
   printf("Elimina è entrata nel nodo %p.\n", Node);
   while(prossimaStanza(Node) != Node){
-    if((Node->avanti)!=NULL)
+    if((Node->avanti) != NULL)
       Node->avanti = Elimina(Node->avanti);
-    if((Node->destra)!= NULL)
+    if((Node->destra) != NULL)
       Node->destra = Elimina(Node->destra);
     if((Node->sinistra) != NULL)
       Node->sinistra = Elimina(Node->sinistra);
@@ -761,5 +731,67 @@ void Termina_Gioco(){
   lista_stanze = stanza_inizio;
   Elimina(lista_stanze);
   free(giocatori);
-  //free(stanza_inizio);
 }
+
+
+
+
+
+
+
+
+/*static int emergenza(int nome){
+  int indice[num_g];
+  int j = 0;
+  int p_i = 0;
+  int p_a = 0;
+  int count = 0;
+  int m;
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[nome].pos == giocatori[i].pos && giocatori[i].stato == assassinato){
+      indice[j] = i;
+      j++;
+    }
+  }
+  if(j == 0)
+    return 0;
+  do{
+    switch(giocatori[indice[m]].stato){
+      case impostore:
+        for(int i = 0; i < j; i++){
+          if(giocatori[indice[i]].stato == impostore){
+            p_i-=3;
+          }
+          else if(giocatori[indice[i]].stato == astronauta){
+            p_i += 2;
+          }
+        }
+        if(rand()%10 < p_i){
+          giocatori[indice[m]].stato = defenestrato;
+          count++;
+        }
+        m++;
+        break;
+      case astronauta:
+        for(int i = 0; i < j; i++){
+          if(giocatori[indice[i]].stato == impostore){
+            p_a+=2;
+          }
+          else if(giocatori[indice[i]].stato == astronauta){
+            p_a -= 3;
+          }
+        }
+        if(rand()%10 < p_a){
+          giocatori[indice[m]].stato = defenestrato;
+          printf("\n Il giocatore %s è stato defenestrato\n\nPremi invio per continuare", StampaN(giocatori[indice[m]].nome));
+          getchar();
+          while(getchar() != '\n');
+          count++;
+        }
+        m++;
+        break;
+    }
+
+  }while(count == 0);
+  return 1;
+}*/
