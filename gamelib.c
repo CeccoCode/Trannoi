@@ -10,6 +10,8 @@ S_Stanza* stanza_inizio;
 S_Stanza* lista_stanze;
 int num_g = 0;
 int nImp = 0;
+int nAstr = 0;
+
 S_Stanza *botole[20];
 S_Stanza *stanze[30];
 int contatore_botola = 0;
@@ -28,7 +30,7 @@ static char *StampaT(int s);
 static void avanza(int num);
 static unsigned short esegui_quest(int num);
 static int probabilita();
-//static int emergenza(int nome);
+static int chiamata_emergenza(int nome);
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col);
 static S_Stanza *Elimina(S_Stanza *Node);
 static S_Stanza *prossimaStanza(S_Stanza *Node);
@@ -59,12 +61,12 @@ void imposta_gioco(){
 
   //chiedo il numero di quest da fare per il salvataggio sell'astronave
   do{
-    printf("\nquante quest vuoi inserire?\t");
+    printf("\n Quante quest vuoi inserire?\n ");
     scanf("%d", &quest);
     while(getchar() != '\n');
     if(num_g > quest || quest < 0)
     {
-      printf("\nIl numero di quest deve essere maggiore o uguale al numero di giocatori\n");
+      printf("\n Il numero di quest deve essere maggiore o uguale al numero di giocatori\n ");
     }
   }while(num_g > quest || quest < 0);
   quest_da_finire = quest;
@@ -76,28 +78,26 @@ void imposta_gioco(){
 
 
   int scelta = 0;
+  clr();
+  printf(" PREMERE:\n 1. Per visualizzare tutte le informazioni sui giocatori\n 2. Per tornare al menù principale e giocare\n ");
 
   do{
-    clr();
-    printf(" PREMERE:\n 1. Per visualizzare tutte le informazioni sui giocatori\n 2. Per tornare al menù principale e giocare\n");
     scanf("%d", &scelta);
     while(getchar() != '\n');
     switch(scelta)
     {
       case 1:
-      clr();
         for(int i = 0; i < num_g; i++){
-          printf("\nIl %d° giocatore è %s ed è un %s la stanza di inizio è di tipo %s", i+1 ,StampaN(giocatori[i].nome), StampaS(giocatori[i].stato), StampaT(giocatori[i].pos->tStanza));
+          printf("\n Il %d° giocatore è %s ed è un %s nella stanza %p.", i+1 ,StampaN(giocatori[i].nome), StampaS(giocatori[i].stato), stanza_inizio);
         }
-        printf("\n\nPremere invio per tornare al menù e avviare il gioco...");
-        getchar();
+        printf("\n\n Premere invio per tornare al menù e avviare il gioco...");
         while(getchar() != '\n');
         break;
       case 2:
         Inizia_gioco();
         break;
       default:
-        printf("Il tasto premuto non corrisponde a nessuna scelta");
+        printf(" Il tasto premuto non corrisponde a nessuna scelta\nReinserisci la tua scelta qui:\t");
     }
   }while(scelta != 1 && scelta != 2);
 
@@ -107,7 +107,7 @@ void imposta_gioco(){
 void gioca(){
 
   if(num_g == 0){
-    printf("\nprima di giocare è necessario impostare il gioco, verrai riportato al menu principale\n");
+    printf("\n Prima di giocare è necessario impostare il gioco, verrai riportato al menu principale\n");
     return;
   }
 
@@ -121,11 +121,11 @@ void gioca(){
 
   lista_stanze = (S_Stanza*) malloc(sizeof(S_Stanza));
   lista_stanze = stanza_inizio;
-  printf("\nper vincere la partita servono %u quest da fare\n", quest_da_finire);
   mischia_turni(turno_giocatori);
+  nAstr = num_g - nImp;
 
 
-  while(quest_da_finire != 0 && nImp != 0){
+  while(quest_da_finire != 0 && nImp != 0 && nAstr != 0){
     clr();
     if(count == num_g){
       mischia_turni(turno_giocatori);
@@ -135,22 +135,22 @@ void gioca(){
     count++;
 
     SetColor(colore);
+
     controllo_scelta = 0;
     if(giocatori[colore].stato == astronauta){
-      printf("\nTurno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
-      printf("\nPremere invio per iniziare il turno...\n");
-      getchar();
+      printf("\n Turno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
+      printf("\n Premere invio per iniziare il turno...\n");
       while(getchar()!='\n');
-      printf("Sei nella stanza: \t%p di tipo: \t%s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
-      printf("\nPer vincere la partita mancano %u quest da fare\n", quest_da_finire);
-      printf("\nIn questa stanza puoi:\n");
-      printf("\n1) avanzare");
-      printf("\n2) eseguire la quest");
-      printf("\n3) Chiamata di emergenza\n");
+      printf(" Sei nella stanza: \t%p di tipo: \t%s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
+      printf("\n Per vincere la partita mancano %u quest da fare\n", quest_da_finire);
+      printf("\n In questa stanza puoi:\n");
+      printf("\n 1) avanzare");
+      printf("\n 2) eseguire la quest");
+      printf("\n 3) Chiamata di emergenza\n ");
       scanf("%d", &s);
       while(getchar() != '\n');
       while(s != 1 && s != 2 && s != 3){
-        printf("\nScelta inesistente, riscrivi qui la tua scelta:\n");
+        printf("\n Scelta inesistente, riscrivi qui la tua scelta:\n ");
         scanf("%d", &s);
         while(getchar() != '\n');
       }
@@ -162,20 +162,22 @@ void gioca(){
             break;
           case 2:
             if(esegui_quest(colore) == 0)
-              printf("\nNon ci sono quest da fare in questa stanza");
+              printf("\n Non ci sono quest da fare in questa stanza");
             else
               controllo_scelta = 1;
             break;
           case 3:
-            /*if(emergenza(colore) == 1)
-              controllo_scelta = 1;*/
+            if(chiamata_emergenza(colore) == 1)
+              controllo_scelta = 1;
+            else
+              printf("\n Non è possibile effettuare una chiamata di emergenza in questa stanza \n");
             break;
           default:
-            printf("\ncomando sbagliato" );
+            printf("\n Comando sbagliato" );
             break;
           }
         if(controllo_scelta == 0){
-          printf("\nInserisci un'altra voce: ");
+          printf("\n Inserisci un'altra voce: ");
           scanf("%d", &s);
           while(getchar() != '\n');
         }
@@ -184,21 +186,20 @@ void gioca(){
 
     if(giocatori[colore].stato == impostore)
     {
-      printf("\nTurno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
-      printf("\nPremere invio per iniziare il turno...\n");
-      getchar();
+      printf("\n Turno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
+      printf("\n Premere invio per iniziare il turno...\n");
       while(getchar()!='\n');
-      printf("Sei nella stanza: %p di tipo: %s",giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
-      printf("\nPremere:");
-      printf("\n1) avanzare");
-      printf("\n2) Chiamata di emergenza");
-      printf("\n3) Uccidi");
-      printf("\n4) Sabotaggio");
-      printf("\n5) Usa botola\n");
+      printf(" Sei nella stanza: %p di tipo: %s",giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
+      printf("\n Premere:");
+      printf("\n 1) avanzare");
+      printf("\n 2) Chiamata di emergenza");
+      printf("\n 3) Uccidi");
+      printf("\n 4) Sabotaggio");
+      printf("\n 5) Usa botola\n ");
       scanf("%d", &s);
       while(getchar() != '\n');
       while(s != 1 && s != 2 && s != 3 && s != 4 && s != 5){
-        printf("\nScelta inesistente, riscrivi qui la tua scelta:\n");
+        printf("\n Scelta inesistente, riscrivi qui la tua scelta:\n ");
         scanf("%d", &s);
         while(getchar() != '\n');
       }
@@ -210,19 +211,21 @@ void gioca(){
             controllo_scelta = 1;
             break;
           case 2:
-            /*if(emergenza(colore) == 1)
-              controllo_scelta = 1;*/
+            if(chiamata_emergenza(colore) == 1)
+              controllo_scelta = 1;
+            else
+              printf("\n Non è possibile effettuare una chiamata di emergenza in questa stanza \n");
             break;
           case 3:
             if(Uccidi_astronauta(giocatori[colore].pos, giocatori[colore].nome, colore) == 1)
               controllo_scelta = 1;
             else{
-              printf("\nNon ci sono giocatori da uccidere in questa stanza");
+              printf("\n Non ci sono giocatori da uccidere in questa stanza");
             }
             break;
             case 4:
                 if(Sabotaggio(colore) == 0)
-                  printf("\nNon è possibile fare un sabotaggio in questa stanza");
+                  printf("\n Non è possibile fare un sabotaggio in questa stanza");
                 else
                   controllo_scelta = 1;
                 break;
@@ -230,15 +233,15 @@ void gioca(){
             if(Usa_Botola(colore) == 1)
               controllo_scelta = 1;
             else
-              printf("\nNon è presente nessuna botola nella stanza");
+              printf("\n Non è presente nessuna botola nella stanza");
 
             break;
           default:
-            printf("\ncomando sbagliato");
+            printf("\n Comando sbagliato");
             break;
         }
         if(controllo_scelta == 0){
-          printf("\nInserisci un'altra voce: ");
+          printf("\n Inserisci un'altra voce: ");
           scanf("%d", &s);
           while(getchar() != '\n');
         }
@@ -246,7 +249,6 @@ void gioca(){
     }
   }
 }
-
 
 /*_______________________Funzione_che_pulisce_lo_schermo_____________________*/
 static void clr(){
@@ -272,8 +274,7 @@ static void SetColor(int col){
 }
 /*_____________________Inizia_gioco()_per_tornare_in_main.c__________________*/
 static void Inizia_gioco(){
-    printf("\nPremi invio per tornare al menù principale:\n");
-    getchar();
+    printf("\n Premi invio per tornare al menù principale:\n ");
     while(getchar() != '\n');
 }
 
@@ -333,17 +334,17 @@ static void mischia_turni(int v[]){
 
 // funzione che chiede il numero di giocatori
 static void n_giocatori(){
-  printf("\nInserisci il numero di giocatori: (Minimo: 4 e Massimo: 10)\n");
+  printf("\n Inserisci il numero di giocatori: (Minimo: 4 e Massimo: 10)\n ");
   scanf("%d", &num_g);
   while(getchar() != '\n');
   do{
     if(num_g < 4){
-      printf("\nInserisci più giocatori:");
+      printf("\n Inserisci più giocatori: ");
       scanf("%d", &num_g);
       while(getchar() != '\n');
     }
     else if(num_g > 10){
-      printf("\nHai inserito troppi giocatori:");
+      printf("\n Hai inserito troppi giocatori: ");
       scanf("%d", &num_g);
       while(getchar() != '\n');
     }
@@ -437,21 +438,6 @@ static void creaStato(){
   }
 }
 
-//funizone pre gestire la probabilità del tipo delle stanze
-static int probabilita(){
-  int n;
-  n = rand()%100;
-  if(n <= 29)
-    return 0;
-  else if(n <= 59 && n >= 30)
-    return 1;
-  else if(n <= 74 && n >= 60)
-    return 2;
-  else if(n <= 100 && n >= 75)
-    return 3;
-  return 0;
-}
-
 //funzione che legge l'enum del nome del gioatore e lo ritorna in stringa
 static char *StampaN(int num){
   switch(num)
@@ -496,11 +482,11 @@ static char *StampaT(int s){
 static void avanza(int num){
   int s;
   lista_stanze = giocatori[num].pos;
-  printf("Dove vuoi andare:\n1.Avanti: %p\n2.Destra: %p\n3.Sinistra: %p\n4.Resta fermo: %p\n", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
+  printf(" Dove vuoi andare:\n 1.Avanti: %p\n 2.Destra: %p\n 3.Sinistra: %p\n 4.Resta fermo: %p\n ", lista_stanze->avanti, lista_stanze->destra, lista_stanze->sinistra, lista_stanze);//giocatori[num].pos->avanti, giocatori[num].pos->destra, giocatori[num].pos->sinistra);
   scanf("%d", &s);
   while(getchar()!= '\n');
   while(s != 1 && s != 2 && s != 3 && s != 4){
-    printf("\nDirezone inesistente, ritenta\n1)avanti\n2)destra\n3)sinistra\n... ");
+    printf("\n Direzone inesistente, ritenta\n 1)avanti\n2) destra\n3) sinistra\n ... ");
     scanf("%d", &s);
     while(getchar() != '\n');
   }
@@ -588,6 +574,21 @@ static void avanza(int num){
   }
 }
 
+//funizone pre gestire la probabilità del tipo delle stanze
+static int probabilita(){
+  int n;
+  n = rand()%100;
+  if(n <= 29)
+    return 0;
+  else if(n <= 59 && n >= 30)
+    return 1;
+  else if(n <= 74 && n >= 60)
+    return 2;
+  else if(n <= 100 && n >= 75)
+    return 3;
+  return 0;
+}
+
 //funzione esugui_quest eseguibile solo dagli astronauti
 static unsigned short esegui_quest(int num){
   if(giocatori[num].pos->tStanza == quest_semplice){
@@ -613,6 +614,8 @@ static unsigned short esegui_quest(int num){
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   int n = 0;
   int s;
+  int v[num_g];
+  int count = 0;
 
   for(int i = 0; i < num_g; i++){
     if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta){
@@ -622,10 +625,12 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   if(n == 0)
     return 0;
   else{
-    printf("\nPuoi uccidere i seguenti giocatori:");
+    printf("\n Puoi uccidere i seguenti giocatori:");
     for(int i = 0; i < num_g; i++){
       if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == 0){
-        printf("\n%d) %s",i, StampaN(giocatori[i].nome));
+        v[count] = i;
+        printf("\n %d) %s",count + 1, StampaN(giocatori[i].nome));
+        count++;
       }
     }
     scanf("%d", &s);
@@ -727,71 +732,83 @@ static S_Stanza *Elimina(S_Stanza*Node){
   return NULL;
 }
 
+static int chiamata_emergenza(int nome){
+
+  int controllo = 0;
+  int arr_g[num_g];
+  int count = 0;
+  int p_imp;
+  int p_ast;
+  int def = 0;
+
+  if(giocatori[nome].pos -> emergenza_chiamata == 0)
+    return 0;
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[nome].pos == giocatori[i].pos && giocatori[i].stato == assassinato)
+      controllo = 1;
+  }
+  if(controllo == 0)
+    return 0;
+
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[i].pos == giocatori[nome].pos){
+      arr_g[count] = i;
+      count++;
+    }
+  }
+  if(count == 0)
+    return 0;
+
+  for(int i = 0; i < count; i++){
+    p_imp = 3;
+    p_ast = 3;
+    if(giocatori[arr_g[i]].stato == impostore){
+      for(int j = 0; j < count; j++){
+        if(giocatori[arr_g[j]].stato == impostore && giocatori[arr_g[j]].nome != giocatori[arr_g[i]].nome)
+          p_imp -= 3;
+        else if(giocatori[arr_g[j]].stato == astronauta)
+          p_imp += 2;
+      }
+    }
+    else if(giocatori[arr_g[i]].stato == astronauta){
+      for(int j = 0; j < count; j++){
+        if(giocatori[arr_g[j]].stato == astronauta && giocatori[arr_g[j]].nome != giocatori[arr_g[i]].nome)
+          p_ast -= 3;
+        else if(giocatori[arr_g[j]].stato == impostore)
+          p_ast += 2;
+      }
+    }
+      if(giocatori[i].stato == impostore){
+        def = rand()%10;
+        if(def <= p_imp){
+          giocatori[i].stato = defenestrato;
+          printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
+          getchar();
+          while(getchar() != '\n');
+          controllo = 0;
+        }
+      }
+      else if(giocatori[i].stato == astronauta){
+        def = rand()%10;
+        if(def <= p_ast){
+          giocatori[i].stato = defenestrato;
+          printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
+          getchar();
+          while(getchar() != '\n');
+          controllo = 0;
+        }
+      }
+      if(controllo == 0)
+        return 1;
+    }
+    printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　Nessuno è stato defenestrato　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ");
+    getchar();
+    while(getchar() != '\n');
+    return 1;
+  }
+
 void Termina_Gioco(){
   lista_stanze = stanza_inizio;
   Elimina(lista_stanze);
   free(giocatori);
 }
-
-
-
-
-
-
-
-
-/*static int emergenza(int nome){
-  int indice[num_g];
-  int j = 0;
-  int p_i = 0;
-  int p_a = 0;
-  int count = 0;
-  int m;
-  for(int i = 0; i < num_g; i++){
-    if(giocatori[nome].pos == giocatori[i].pos && giocatori[i].stato == assassinato){
-      indice[j] = i;
-      j++;
-    }
-  }
-  if(j == 0)
-    return 0;
-  do{
-    switch(giocatori[indice[m]].stato){
-      case impostore:
-        for(int i = 0; i < j; i++){
-          if(giocatori[indice[i]].stato == impostore){
-            p_i-=3;
-          }
-          else if(giocatori[indice[i]].stato == astronauta){
-            p_i += 2;
-          }
-        }
-        if(rand()%10 < p_i){
-          giocatori[indice[m]].stato = defenestrato;
-          count++;
-        }
-        m++;
-        break;
-      case astronauta:
-        for(int i = 0; i < j; i++){
-          if(giocatori[indice[i]].stato == impostore){
-            p_a+=2;
-          }
-          else if(giocatori[indice[i]].stato == astronauta){
-            p_a -= 3;
-          }
-        }
-        if(rand()%10 < p_a){
-          giocatori[indice[m]].stato = defenestrato;
-          printf("\n Il giocatore %s è stato defenestrato\n\nPremi invio per continuare", StampaN(giocatori[indice[m]].nome));
-          getchar();
-          while(getchar() != '\n');
-          count++;
-        }
-        m++;
-        break;
-    }
-
-  }while(count == 0);
-  return 1;
-}*/
