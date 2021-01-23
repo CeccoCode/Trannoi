@@ -40,7 +40,7 @@ static void SetColor(int col);
 static void Inizia_gioco();
 static int Sabotaggio(int nome);
 static int Usa_Botola(int nome);
-static S_Stanza *Botole(S_Stanza *Node, int nome);
+static void Cerca_G(int nome);
 /*___________________________________________________________________________*/
 
 
@@ -141,7 +141,8 @@ void gioca(){
       printf("\n Turno del giocatore \t%s\n",StampaN(giocatori[colore].nome));
       printf("\n Premere invio per iniziare il turno...\n");
       while(getchar()!='\n');
-      printf(" Sei nella stanza: \t%p di tipo: \t%s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
+      printf(" Sei nella stanza: \t%p di tipo: %s", giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
+      Cerca_G(colore);
       printf("\n Per vincere la partita mancano %u quest da fare\n", quest_da_finire);
       printf("\n In questa stanza puoi:\n");
       printf("\n 1) avanzare");
@@ -190,6 +191,7 @@ void gioca(){
       printf("\n Premere invio per iniziare il turno...\n");
       while(getchar()!='\n');
       printf(" Sei nella stanza: %p di tipo: %s",giocatori[colore].pos, StampaT(giocatori[colore].pos->tStanza));
+      Cerca_G(colore);
       printf("\n Premere:");
       printf("\n 1) avanzare");
       printf("\n 2) Chiamata di emergenza");
@@ -610,6 +612,14 @@ static unsigned short esegui_quest(int num){
     return 0;
 }
 
+static void Cerca_G(int nome){
+  printf("\n Nella tua stanza sono presenti questi giocatori: ");
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[i].pos == giocatori[nome].pos && giocatori[i].nome != giocatori[nome].nome)
+      printf(" %s, ", StampaN(giocatori[i].nome));
+  }
+}
+
 //funzione uccidi_astronauta eseguibile solo dagli impostori
 static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   int n = 0;
@@ -782,8 +792,8 @@ static int chiamata_emergenza(int nome){
         def = rand()%10;
         if(def <= p_imp){
           giocatori[i].stato = defenestrato;
+          clr();
           printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
-          getchar();
           while(getchar() != '\n');
           controllo = 0;
         }
@@ -792,8 +802,8 @@ static int chiamata_emergenza(int nome){
         def = rand()%10;
         if(def <= p_ast){
           giocatori[i].stato = defenestrato;
+          clr();
           printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
-          getchar();
           while(getchar() != '\n');
           controllo = 0;
         }
@@ -801,8 +811,8 @@ static int chiamata_emergenza(int nome){
       if(controllo == 0)
         return 1;
     }
+    clr();
     printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　Nessuno è stato defenestrato　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ");
-    getchar();
     while(getchar() != '\n');
     return 1;
   }
