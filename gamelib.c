@@ -41,6 +41,7 @@ static void Inizia_gioco();
 static int Sabotaggio(int nome);
 static int Usa_Botola(int nome);
 static void Cerca_G(int nome);
+static void FinePartita();
 /*___________________________________________________________________________*/
 
 
@@ -250,6 +251,7 @@ void gioca(){
       }while(controllo_scelta == 0);
     }
   }
+  FinePartita();
 }
 
 /*_______________________Funzione_che_pulisce_lo_schermo_____________________*/
@@ -616,7 +618,39 @@ static void Cerca_G(int nome){
   printf("\n Nella tua stanza sono presenti questi giocatori: ");
   for(int i = 0; i < num_g; i++){
     if(giocatori[i].pos == giocatori[nome].pos && giocatori[i].nome != giocatori[nome].nome)
-      printf(" %s, ", StampaN(giocatori[i].nome));
+      if(giocatori[i].stato == astronauta || giocatori[i].stato == impostore)
+        printf(" %s, ", StampaN(giocatori[i].nome));
+  }
+  for(int i = 0; i < num_g; i++){
+    if(giocatori[i].pos == giocatori[nome].pos && giocatori[i].nome != giocatori[nome].nome)
+       if(giocatori[i].pos == giocatori[nome].pos && giocatori[i].stato == assassinato)
+        printf("\n Il giocatore %s è stato trovato assassinato nella stanza\n",StampaN(giocatori[i].nome) );
+  }
+}
+
+static void FinePartita(){
+  if(quest_da_finire == 0 || nImp == 0){
+    clr();
+    printf("   _____                                   _                  _       _ _ _\n");
+    printf("  / ____|                                 | |                (_)     | | | |\n");
+    printf(" | |     _ __ _____      ___ __ ___   __ _| |_ ___  __      ___ _ __ | | | |\n");
+    printf(" | |    | '__/ _ \\ \\ /\\ / / '_ ` _ \\ / _` | __/ _ \\ \\ \\ /\\ / / | '_ \\| | | |\n");
+    printf(" | |____| | |  __/\\ V  V /| | | | | | (_| | ||  __/  \\ V  V /| | | | |_|_|_|\n");
+    printf("  \\_____|_|  \\___| \\_/\\_/ |_| |_| |_|\\__,_|\\__\\___|   \\_/\\_/ |_|_| |_(_|_|_)\n");
+    printf("\n Premere invio per tornare al menu e terminare il gioco\n");
+    getchar();
+    while(getchar() != '\n');
+  }else if(nAstr == 0){
+    clr();
+    printf("\n   _____                           _               __    __ _         _  _  _");
+    printf("\n   \\_   \\_ __ ___  _ __   ___  ___| |_ ___  _ __  / / /\\ \\ (_)_ __   / \\/ \\/ \\");
+    printf("\n    / /\\/ '_ ` _ \\| '_ \\ / _ \\/ __| __/ _ \\| '__| \\ \\/  \\/ / | '_ \\ /  /  /  /");
+    printf("\n /\\/ /_ | | | | | | |_) | (_) \\__ \\ || (_) | |     \\  /\\  /| | | | /\\_/\\_/\\_/");
+    printf("\n \\____/ |_| |_| |_| .__/ \\___/|___/\\__\\___/|_|      \\/  \\/ |_|_| |_\\/ \\/ \\/");
+    printf("\n                |_|");
+    printf("\n Premere invio per tornare al menu e terminare il gioco\n");
+    getchar();
+    while(getchar() != '\n');
   }
 }
 
@@ -626,6 +660,7 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   int s;
   int v[num_g];
   int count = 0;
+  int controllo = 0;
 
   for(int i = 0; i < num_g; i++){
     if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta){
@@ -635,19 +670,30 @@ static int Uccidi_astronauta(S_Stanza *stanza, int nome, int col){
   if(n == 0)
     return 0;
   else{
-    printf("\n Puoi uccidere i seguenti giocatori:");
+    printf("\n Puoi uccidere i seguenti giocatori:\n");
     for(int i = 0; i < num_g; i++){
-      if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == 0){
+      if(giocatori[i].pos == stanza && giocatori[i].nome != nome && giocatori[i].stato == astronauta){
         v[count] = i;
-        printf("\n %d) %s",count + 1, StampaN(giocatori[i].nome));
+        printf(" %d) %s\n ",i, StampaN(giocatori[i].nome));
         count++;
       }
     }
-    scanf("%d", &s);
+    do{
+      printf("\n Inserisci il numero del giocatore da uccidere\n ");
+      scanf("%d", &s);
+      while(getchar() != '\n');
+      for(int i = 0; i < count; i++){
+        if(s == v[i])
+          controllo = 1;
+      }
+    }while(controllo  == 0);
     while(getchar() != '\n');
     giocatori[s].stato = assassinato;
-    if(Defenestra(stanza, nome, col) == 1){
-      giocatori[s].stato = defenestrato;
+    nAstr--;
+    if(count >  1){
+      if(Defenestra(stanza, nome, col) == 1){
+        giocatori[s].stato = defenestrato;
+      }
     }
     return 1;
   }
@@ -666,7 +712,7 @@ static int Defenestra(S_Stanza *stanza, int nome, int col){
   if(n == 0)
     return 0;
   d = rand()%10;
-  if(d <= n){
+  if(d < n){
     giocatori[col].stato = defenestrato;
     nImp--;
     clr();
@@ -796,6 +842,7 @@ static int chiamata_emergenza(int nome){
           printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
           while(getchar() != '\n');
           controllo = 0;
+          nImp--;
         }
       }
       else if(giocatori[i].stato == astronauta){
@@ -806,8 +853,10 @@ static int chiamata_emergenza(int nome){
           printf("\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n　　　.　　　 　　.　　　　　。　　 。　. 　\n\t\t.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•\n\t\t　　ﾟ　　il %s è stato defenestrato.　 。　.\n\t\t. 　　　。　　　　•　 　ﾟ　　。 　　.\n\t\t　　　.　　　 　　.　　　　　。　　 。　. ", StampaN(giocatori[i].nome));
           while(getchar() != '\n');
           controllo = 0;
+          nAstr--;
         }
       }
+      giocatori[nome].pos->emergenza_chiamata = 0;
       if(controllo == 0)
         return 1;
     }
