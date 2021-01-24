@@ -739,7 +739,7 @@ static int Usa_Botola(int nome){
   int n;
   S_Stanza *appoggio = giocatori[nome].pos;
 
-  if(giocatori[nome].pos->tStanza != botola || giocatori[nome].pos->stanza_precedente == NULL)
+  if(giocatori[nome].pos->tStanza != botola)
     return 0;
   if(contatore_botola > 1){
     do{
@@ -867,7 +867,9 @@ static int chiamata_emergenza(int nome){
   }
 
 void Termina_Gioco(){
-  lista_stanze = stanza_inizio;
-  Elimina(lista_stanze);
+  if(stanza_inizio != NULL){
+    lista_stanze = stanza_inizio;
+    Elimina(lista_stanze);
+  }
   free(giocatori);
 }
